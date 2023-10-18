@@ -1,2 +1,2 @@
 # Liver
-The Diagnosis of Hepatic Focal Lesions Disease
+Focal Liver Lesions Diagnosis
