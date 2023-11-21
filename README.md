@@ -56,19 +56,17 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
 
 ### Usage
 ```
-cd ./Code
+cd ./Code/LiLNet/
 python3 BM_train.py
 ```
 
 
-### Getting Started
-* For TransResNet (Table 2 in paper), please see TransResNet_model/train.py for detailed instructions.
-* For Figure 2 in paper, plearse see rotate.py and data_enhancement.py.
-* For Ensembel learning (Table 3 in paper), please see pre_models and ensemble.py.
-* For Performance with Data Enhancement (Figure 4 in paper), please see heat_map.py
-* For Transfer Learnig (Table 5 in paper), please see transfer.
-* For ROC curves (Figure 5 in paper), please see roc_curve.
-* For Figures 7 and 8 in paper,  please see hot_view.py.
+### Category Metrics
+* Accuracy
+* Area under the receiver operating characteristic curve (AUC)
+* Recall
+* Precision
+* F1 score
 
 
 
