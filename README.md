@@ -1,5 +1,6 @@
 # Focal Liver Lesions Diagnosis
-<div align=center><img src="https://github.com/yangmeiyi/ccRCC_project/blob/main/network.jpg" width="900" height="650" /></div>
+<div align=center><img src="https://github.com/yangmeiyi/Liver/blob/main/background.png" width="900" height="650" /></div>
+
 
 ## Introduction
 In this repository we release models from the paper "CT-based Transformer model for non-invasively predicting the Fuhrman nuclear grade of clear cell renal cell carcinoma".
