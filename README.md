@@ -1,5 +1,5 @@
 # Focal Liver Lesions Diagnosis
-<div align=center><img src="https://github.com/yangmeiyi/Liver/blob/main/background.png" width="900" height="650" /></div>
+<div align=center><img src="https://github.com/yangmeiyi/Liver/blob/main/background.png" width="1000" height="350" /></div>
 
 
 ## Introduction
