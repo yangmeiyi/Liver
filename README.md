@@ -12,34 +12,22 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
 
 
 ## Content
-- 一级标题(#一级标题)
-  - [二级标题1](#二级标题1)
-    - [三级标题1.1](#三级标题1.1)
-    - [三级标题1.2](#三级标题1.2)
-  - [二级标题2](#二级标题2)
-- [另一个一级标题](#另一个一级标题)
-  - [另一个二级标题1](#另一个二级标题1)
-    - [另一个三级标题1.1](#另一个三级标题1.1)
-    - [另一个三级标题1.2](#另一个三级标题1.2)
-  - [另一个二级标题2](#另一个二级标题2)
-
- 
-- > ├──Readme.md               // help  <br>
-> ├──Code              <br>  
-> > ├──LiLNet             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─BM_train.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─Benign_train.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─Malignant_train.py           // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─process.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─resnet50.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > ├──dataloader       // tpr and fpr data, which can be used to draw ROC curves  <br>
-> > > ├─resnet50.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─resnet50.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > > ├─resnet50.py             // external validation (from public dataset TCGA-KIRC)  <br>
-> > ├──utils        //  ROC curves  <br>
-> ├──Web testing data   <br>
-> > ├──Background        //  ROC curves  <br>
-> > ├──Lesions        //  ROC curves  <br>
+- Code
+  - LiLNet (Classification Diagnosis Model Folder for Deep Learning)
+    - process.py  (The detail of our method)
+    - resnet50_our.py(Our frame based on Resnet50)
+    - BM_train.py  (Training file for distinguishing between benign and malignant liver lesions)
+    - Benign_train.py(Training file for classifying benign liver lesions into three categories (fnh, hem, cyst))
+    - Malignant_train.py(Training file for classifying malignant liver lesions into three categories (hcc, icc, met))
+  - dataloader(Used for deep learning to load image data)
+    - dataloader_two_classification.py  (The dataloader for distinguishing between benign and malignant liver lesions)
+    - fnh_hem_cyst_dataloader.py  (The dataloader for distinguishing fnh, hem, and cyst lesions)
+    - hcc_icc_met_dataloader.py  (The dataloader for distinguishing hcc, icc, and met lesions)
+  - utils(Used for deep learning to load image data)
+- Web testing data  (Data used to test the diagnostic system for liver lesions)
+  - Background 
+  - Lesions  (Randomly selected six types of lesion images(hcc, icc, met, fnh, hem, and cyst))
+- Readme.md (help)
 
 
 ## Code 
