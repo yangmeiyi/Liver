@@ -34,24 +34,32 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
 
 ### Requirements
 * Ubuntu (It's only tested on Ubuntu, so it may not work on Windows.)
-* Python >= 3.6.8
-* PyTorch >= 1.0.1
-* torchvision
-* einops
-* cuda
+* Python >= 3.9.7
+* PyTorch >= 1.12.1
+* torchvision >= 0.13.1
+* scikit-learn >=1.1.3
+* scipy >= 1.9.3
+* numpy >=1.23.3
+
 
 ### Parameters
 | Parameters | Value |
 |-----------|:---------:|
-| Row 1, Col 1 | Row 1, Col 2 | 
-| Row 2, Col 1 | Row 2, Col 2 | 
-| Row 3, Col 1 | Row 3, Col 2 | 
-
+| image size | 224 | 
+| Initial learning rate | 0.01 | 
+| Epoches | 50 | 
+| Schedule | [20, 35] | 
+| Weight decay | 0.0001 | 
+| Optimizer | optim.SGD | 
+| Criterion | CrossEntropyLoss | 
 
 
 ### Usage
+```
+cd ./Code
+python3 BM_train.py
+```
 
-python3 ./TransResNet_model/train.py
 
 ### Getting Started
 * For TransResNet (Table 2 in paper), please see TransResNet_model/train.py for detailed instructions.
