@@ -68,7 +68,9 @@ python3 BM_train.py
 * Precision
 * F1 score
 
+## Validation Scoring
+On the test set, the LiLNet_BM model achieved the following performance metrics: 97·6% AUC, 92·6% ACC, 93·7% SE, and 92·7% SP. The LiLNet_M model achieved: 96·5% AUC, 88·1% ACC, 88·5% f1, 87·1% recall, and 91·1% precision. Lastly, the LiLNet_B model achieved: 95·5% AUC, 89·9% ACC, 89·9% f1, 90·1% recall, and 90·2% precision.
 
-
+In the Henan center, our model obtained an AUC of 92·5% for distinguishing benign and malignant tumors, with 90·1% ACC, 93·0% SE, and 80·3% SP. For malignant tumor diagnosis, it achieved an AUC of 88.0% with 80.8% ACC, 81·75% F1, 80·9% recall, and 83·6% precision. For benign tumor diagnosis, it achieved an AUC of 91·7% with 85·4% ACC, 84·2% F1, 84·6% recall, and 85·3% precision. In the Chengdu center, it achieved a remarkable AUC of 99·6% and an ACC of 96·8% for diagnosing malignant tumors. Similarly, in the Leshan center, the model achieved impressive results with an AUC of 99·7% and an ACC of 97·5%. In the Guizhou center, it maintained strong performance with an AUC of 99·2% and an ACC of 93·0%. 
 
 
