@@ -12,22 +12,27 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
 
 
 ## Content
-- Code
-  - LiLNet (Classification Diagnosis Model Folder for Deep Learning)
-    - process.py  (The detail of our method)
-    - resnet50_our.py(Our frame based on Resnet50)
-    - BM_train.py  (Training file for distinguishing between benign and malignant liver lesions)
-    - Benign_train.py(Training file for classifying benign liver lesions into three categories (fnh, hem, cyst))
-    - Malignant_train.py(Training file for classifying malignant liver lesions into three categories (hcc, icc, met))
-  - dataloader(Used for deep learning to load image data)
-    - dataloader_two_classification.py  (The dataloader for distinguishing between benign and malignant liver lesions)
-    - fnh_hem_cyst_dataloader.py  (The dataloader for distinguishing fnh, hem, and cyst lesions)
-    - hcc_icc_met_dataloader.py  (The dataloader for distinguishing hcc, icc, and met lesions)
-  - utils(Used for deep learning to load image data)
-- Web testing data  (Data used to test the diagnostic system for liver lesions)
-  - Background 
-  - Lesions  (Randomly selected six types of lesion images(hcc, icc, met, fnh, hem, and cyst))
-- Readme.md (help)
+- 📁Classification
+  - 📁LiLNet (Classification Diagnosis Model Folder for Deep Learning)
+    - 📄process.py  (The detail of our method)
+    - 📄resnet50_our.py(Our frame based on Resnet50)
+    - 📄BM_train.py  (Training file for distinguishing between benign and malignant liver lesions)
+    - 📄Benign_train.py(Training file for classifying benign liver lesions into three categories (fnh, hem, cyst))
+    - 📄Malignant_train.py(Training file for classifying malignant liver lesions into three categories (hcc, icc, met))
+  - 📁dataloader(Used for deep learning to load image data)
+    - 📄dataloader_two_classification.py  (The dataloader for distinguishing between benign and malignant liver lesions)
+    - 📄fnh_hem_cyst_dataloader.py  (The dataloader for distinguishing fnh, hem, and cyst lesions)
+    - 📄hcc_icc_met_dataloader.py  (The dataloader for distinguishing hcc, icc, and met lesions)
+  - 📁utils(Used for deep learning to load image data)
+- 📁Detection
+  - 📄train.py ()
+  - 📄test.py ()
+  - 📄calculate_index.py ()
+
+- 📁Web testing data  (Data used to test the diagnostic system for liver lesions)
+  - 📁Background 
+  - 📁Lesions  (Randomly selected six types of lesion images(hcc, icc, met, fnh, hem, and cyst))
+- 📄Readme.md (help)
 
 
 ## Code 
@@ -72,5 +77,4 @@ python3 BM_train.py
 On the test set, the LiLNet_BM model achieved the following performance metrics: 97·6% AUC, 92·6% ACC, 93·7% SE, and 92·7% SP. The LiLNet_M model achieved: 96·5% AUC, 88·1% ACC, 88·5% f1, 87·1% recall, and 91·1% precision. Lastly, the LiLNet_B model achieved: 95·5% AUC, 89·9% ACC, 89·9% f1, 90·1% recall, and 90·2% precision.
 
 In the Henan center, our model obtained an AUC of 92·5% for distinguishing benign and malignant tumors, with 90·1% ACC, 93·0% SE, and 80·3% SP. For malignant tumor diagnosis, it achieved an AUC of 88.0% with 80.8% ACC, 81·75% F1, 80·9% recall, and 83·6% precision. For benign tumor diagnosis, it achieved an AUC of 91·7% with 85·4% ACC, 84·2% F1, 84·6% recall, and 85·3% precision. In the Chengdu center, it achieved a remarkable AUC of 99·6% and an ACC of 96·8% for diagnosing malignant tumors. Similarly, in the Leshan center, the model achieved impressive results with an AUC of 99·7% and an ACC of 97·5%. In the Guizhou center, it maintained strong performance with an AUC of 99·2% and an ACC of 93·0%. 
-
 
