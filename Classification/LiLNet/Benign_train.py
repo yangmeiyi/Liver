@@ -145,8 +145,6 @@ def main():
         self_distillation=args.self_distillation
     )
 
-    pretrained = True
-    up_load = False
     if use_cuda:
         model = torch.nn.DataParallel(model).cuda()
 
