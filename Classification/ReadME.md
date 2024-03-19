@@ -22,7 +22,7 @@ Example of  data storage is shown as follows,
     + 🖼️**IMG-0002-00001_0.bmp**
     + 🖼️**IMG-0002-00001_1.bmp**
     + $\ldots$
-  + 📄**train.csv**
++ 📄**train.csv**
 
 The format of **train.csv** is as follows:
 
