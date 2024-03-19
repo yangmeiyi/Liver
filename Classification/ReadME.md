@@ -26,7 +26,7 @@ Example of  data storage is shown as follows,
 
 The format of **train.csv** is as follows:
 
-| ID               | Class |
+| Person ID               | Class |
 | ---------------- | ----- |
 | 0000-00000-00001 | HCC   |
 | 0000-00000-00002 | ICC   |
