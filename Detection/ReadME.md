@@ -71,3 +71,16 @@ python Calculate_index.py
 ```
 
 **true_boxes_dir** is the directory where the real box is stored, and **pred_boxes_dir** is the directory where the prediction box is stored.
+
+# The Result of Detection
+
+| IOU:0.3 | F1   | Precision | Recall |
+| ------- | ---- | --------- | ------ |
+| HCC     | 94.0 | 93.7      | 94.3   |
+| ICC     | 92.1 | 89.2      | 95.2   |
+| MET     | 90.7 | 88.7      | 92.8   |
+| FNH     | 91.5 | 91.3      | 91.7   |
+| HEM     | 95.3 | 99.1      | 91.8   |
+| CYST    | 94.9 | 97.7      | 92.3   |
+| Overall | 92.8 | 92.0      | 93.7   |
+
