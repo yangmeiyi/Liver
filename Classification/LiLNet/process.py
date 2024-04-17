@@ -71,8 +71,8 @@ def train_process(data_loader, model, criterion, optimizer, use_cuda, beta, self
         else:
             loss = criterion(outputs3, joint_targets) + beta * criterion(outputs2, joint_targets) # + criterion(outputs_SI, targets)
 
-        print(outputs3, joint_targets)
-        exit()
+        # print(outputs3, joint_targets)
+        # exit()
 
         # measure accuracy
         prec_SI = accuracy(outputs_SI.data, targets.data, topk=(1,))
