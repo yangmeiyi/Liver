@@ -4,7 +4,7 @@
 
 ## Introduction
 In this repository we release models from the paper "Advancing Focal Liver Lesion Diagnosis: Harnessing the Power of Deep Learning with Large-Scale Data and Multistage CT Imaging".
-This study focused on developing a deep-learning AI-assisted system for liver clinical diagnosis. Previous studies have indicated that deep-learning algorithms outperformed health-care professionals with respect to some clinical outcomes.14,24,25 We propose a liver lesion diagnosis system based on deep learning, LiLNet, can automate the analysis of radiation imaging, rapidly screening and identifying suspicious regions for further examination by radiologists. With the utilization of multi-center and large sample data, this system offers a relatively comprehensive diagnostic approach. 
+This study focused on developing a deep-learning AI-assisted system for liver clinical diagnosis. Previous studies have indicated that deep-learning algorithms outperformed health-care professionals with respect to some clinical outcomes. We propose a liver lesion diagnosis system based on deep learning, LiLNet, can automate the analysis of radiation imaging, rapidly screening and identifying suspicious regions for further examination by radiologists. With the utilization of multi-center and large sample data, this system offers a relatively comprehensive diagnostic approach. 
 
 <div align=center><img src="https://github.com/yangmeiyi/Liver/blob/main/frame.png" width="1000" height="850" /></div>
 
