@@ -59,12 +59,6 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
 | Criterion | CrossEntropyLoss | 
 
 
-### Usage
-```
-cd ./Code/LiLNet/
-python3 BM_train.py
-```
-
 
 ### Category Metrics
 * Accuracy
