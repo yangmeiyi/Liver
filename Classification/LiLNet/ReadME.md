@@ -36,7 +36,7 @@ The csv for training, testing, and validation is placed together with the patien
 
 # Data Processing and Loading
 
-The./dataloader/hcc_icc_met_dataloader.py file processes data including:
+The ./dataloader/hcc_icc_met_dataloader.py file processes data including:
 
 ```python
 train_high_compose = transforms.Compose([
@@ -126,7 +126,7 @@ Open and load the trained model: up_load = True
 The default parameters of BM_train.py are used to test the classification of benign and malignant. Run the following script to validate with files above:
 
 ```
-# The trained model parameters is: BM.pth.tar
+# The trained model parameters is: [BM.pth.tar](https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=drive_link)
 python BM_train.py
 ```
 
