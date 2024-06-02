@@ -49,15 +49,15 @@ where **images** store the original image, **labels** store labels in .txt forma
 # Model Training
 
 **YOLO_V8**:
-
+yolov8x.pt (Download: https://drive.google.com/file/d/1rYGl2g424MoNwc3LMM_sDJ8JwSDA2voi/view?usp=drive_link) 
 ```python
 from ultralytics import YOLO
 model = YOLO("detection/yolov8x.pt")
 model.train(data="detection/mydata.yaml",mosaic=0.1,imgsz=512,amp=False,epochs=200,warmup_epochs=0,batch=64,device=[0,1,2,3])
 ```
 
-# Model Validation
-
+# Model Testing
+best.pt (Download: https://drive.google.com/file/d/1y7TzrwmhK6vb1BeXQFty0FqNKXcgVTBU/view?usp=drive_link)
 ```bash
 python Test.py
 ```
@@ -84,3 +84,5 @@ python Calculate_index.py
 | CYST    | 94.9 | 97.7      | 92.3   |
 | Overall | 92.8 | 92.0      | 93.7   |
 
+# Model Usage Agreement
+The model parameter (best.pt) is intended solely for academic research purposes. Commercial use is strictly prohibited, as is any attempt at reverse engineering or reconstructing the original training data.
