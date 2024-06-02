@@ -126,24 +126,24 @@ Open and load the trained model: up_load = True
 The default parameters of BM_train.py are used to test the classification of benign and malignant. Run the following script to validate with files above:
 
 ```
-# The trained model parameters is: [BM.pth.tar](https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=drive_link)
+# The trained model parameters is: BM.pth.tar (Download：https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=drive_link)
 python BM_train.py
 ```
 
 The default parameters of Benign_train.py are used to test the benign (FNH, HEM,CYST) 3 classification. Run the following script to validate with files above:
 
 ```
-# The trained model parameters is: B.pth.tar
+# The trained model parameters is: B.pth.tar (Download: https://drive.google.com/file/d/1fRdwKXlfEX2h87vW6Mv6C7XcZKRXJnRF/view?usp=drive_link)
 python Benign_train.py
 ```
 
 The default parameters of Malignant_train.py are used to test the malignancy (HCC, ICC, MET) 3 classification. Run the following script to validate with files above:
 
 ```
-# The trained model parameters is: M.pth.tar
+# The trained model parameters is: M.pth.tar (Download: https://drive.google.com/file/d/1-ti8Fyugc4djyGpQ4Qs92Ek_CnXoGmfd/view?usp=drive_link)
 python Malignant_train.py
 ```
 
 # Model Usage Agreement
 
-The model parameters (BM.pth.tar, B.pth.tar, and M.pth.tar, ) are intended solely for academic research purposes. Commercial use is strictly prohibited, as is any attempt at reverse engineering or reconstructing the original training data.
+The model parameters (BM.pth.tar, B.pth.tar, and M.pth.tar) are intended solely for academic research purposes. Commercial use is strictly prohibited, as is any attempt at reverse engineering or reconstructing the original training data.
