@@ -37,7 +37,7 @@ train_low_compose = transforms.Compose([
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomVerticalFlip(p=0.5),
     transforms.RandomRotation(90),
-    transforms.RandomInvert(p=0.5),  # 反色
+    transforms.RandomInvert(p=0.5),  
     # transforms.ColorJitter(brightness=(0, 10)),
     # AddGaussianNoise(mean=0.0, variance=1.0, amplitude=1.0, prob=0.2),
     # AddSaltPepperNoise(density=0.2, prob=0.2),
