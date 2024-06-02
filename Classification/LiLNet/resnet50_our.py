@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from LiLNet.transforms import *
+from transforms import *
 from torch.cuda.amp import autocast as autocast
 
 try:
@@ -52,7 +52,7 @@ class BasicBlock(nn.Module):
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = norm_layer(planes)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()  # inplace=True
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
@@ -93,7 +93,7 @@ class Bottleneck(nn.Module):
         self.bn2 = norm_layer(width)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.downsample = downsample
         self.stride = stride
 
@@ -114,7 +114,7 @@ class Bottleneck(nn.Module):
         if self.downsample is not None:
             identity = self.downsample(x)
 
-        out += identity
+        out += identity.clone()
         out = self.relu(out)
 
         return out
@@ -128,10 +128,11 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
 
         # Fc / Mask Mode
-        self.fc_mode = '2fc'
+        self.fc_mode = '2fcsd' # 2fc
         self.mask_mode = '4mask'
         print('\nMask Mode: {0}  Fc Mode: {1}'.
               format(self.mask_mode, self.fc_mode))
+        # print("num classes:", num_classes)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -151,7 +152,7 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
                                bias=False)  # 224x224
         self.bn1 = norm_layer(self.inplanes)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)  # 112x112
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
@@ -278,13 +279,15 @@ class ResNet(nn.Module):
 
         x = self.layer4(x)
         # print("x4:", x.size())
+        feature = x
         x = self.trans4.mask_trans(x)
         x = self.avgpool(x)
         feature = x.view(x.size(0), -1)
         feature = self.fc_ens(feature)
         x = self.fc(feature)
-        # return feature, x3
+        # return x, feature
         return x, x3
+        # return x
 
 
     def double_fc_sd_forward(self, x):
@@ -310,6 +313,7 @@ class ResNet(nn.Module):
         x = self.trans4.mask_trans(x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
+        x = self.fc_ens(x)
         x = self.fc(x)
 
         return x, x3, x_SD
@@ -329,6 +333,7 @@ class ResNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x, feature
+        # return x
 
 
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
