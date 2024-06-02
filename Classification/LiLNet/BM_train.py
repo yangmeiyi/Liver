@@ -14,6 +14,8 @@ import torch.optim as optim
 import torch.utils.data as data
 from resnet50_our import Our_resnet50
 from dataloader.dataloader_two_classification import CancerSeT_CSV
+from collections import OrderedDict
+from utils.variables import *
 from process import *
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -24,7 +26,7 @@ parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
 # Optimization options
 parser.add_argument('--num_classes', default=2, type=int, metavar='N',
                     help='number of classification')
-parser.add_argument('--epochs', default=50, type=int, metavar='N',
+parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -34,7 +36,7 @@ parser.add_argument('--test-batch', default=512, type=int, metavar='N',
                     help='test batchsize')
 parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
                     metavar='LR', help='initial learning rate')
-parser.add_argument('--schedule', type=int, nargs='+', default=[25,35],
+parser.add_argument('--schedule', type=int, nargs='+', default=[10, 15],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -55,9 +57,9 @@ parser.add_argument('--block-name', type=str, default='Bottleneck',
 
 # Ours
 parser.add_argument('--beta', type=float, default=1., help='Ratio for the second to last.')
-parser.add_argument('--self-distillation', action='store_true', default=False,
+parser.add_argument('--self-distillation', action='store_true', default=True,
                     help='Utilizing self-distillation in ours or not.')
-parser.add_argument('--fc_mode', type=str, default='2fc', help='')
+parser.add_argument('--fc_mode', type=str, default='2fcsd', help='')
 parser.add_argument('--mask_mode', type=str, default='mask_mode', help='')
 
 # Miscs
@@ -92,21 +94,12 @@ if use_cuda:
     torch.cuda.manual_seed_all(args.manualSeed)
 
 
-
-def save_auc_checkpoint(state, auc_is_best, checkpoint="./save_multi_model/2023_7_12/",
-                        filename='resnet50_our_BM_auc.tar'):
-    filepath = os.path.join(checkpoint, filename)
+def save_acc_checkpoint(state, epoch, checkpoint="./", filename='BM_our_sd_acc.pth.tar'):
+    save_filename = "epoch_" + str(epoch) + "_" + filename
+    filepath = os.path.join(checkpoint, save_filename)
     torch.save(state, filepath)
-    if auc_is_best:
-        shutil.copyfile(filepath, os.path.join(checkpoint, 'resnet50_our_BM_auc_best.pth.tar'))
 
 
-def save_acc_checkpoint(state, acc_is_best, checkpoint="./save_multi_model/2023_7_12/",
-                        filename='resnet50_our_BM_acc.pth.tar'):
-    filepath = os.path.join(checkpoint, filename)
-    torch.save(state, filepath)
-    if acc_is_best:
-        shutil.copyfile(filepath, os.path.join(checkpoint, 'resnet50_our_BM_acc_best_1.pth.tar'))
 
 
 
@@ -121,21 +114,21 @@ def main():
     # Data
     print('==> Preparing Dataset %s For %d Classes' % (args.dataset, args.num_classes))
     print('    Dataset: %s\n    Num Classes: %d' % (args.dataset, args.num_classes))
-    PATH = "/home/dkd/Data_4TDISK/dataset_ct_ap_pvp_crop_224/"
+    PATH = "/home/dkd/Data_4TDISK/dataset_ct_ap_pvp_crop_224/" 
     Liver_loader_train = CancerSeT_CSV(PATH, 'train')
     Liver_loader_test = CancerSeT_CSV(PATH, 'test')
     Liver_loader_val_hn = CancerSeT_CSV(PATH, 'val_hn')
-    Liver_loader_val_cd = CancerSeT_CSV(PATH, 'val_cd')
-    Liver_loader_val_gz = CancerSeT_CSV(PATH, 'val_gz')
-    Liver_loader_val_les = CancerSeT_CSV(PATH, 'val_les')
+    # Liver_loader_val_cd = CancerSeT_CSV(PATH, 'val_cd')
+    # Liver_loader_val_gz = CancerSeT_CSV(PATH, 'val_gz')
+    # Liver_loader_val_les = CancerSeT_CSV(PATH, 'val_les')
 
 
     train_loader = torch.utils.data.DataLoader(Liver_loader_train, batch_size=args.train_batch, shuffle=True, drop_last=False)
     test_loader = torch.utils.data.DataLoader(Liver_loader_test, batch_size=args.test_batch, shuffle=False)
     val_loader = torch.utils.data.DataLoader(Liver_loader_val_hn, batch_size=args.test_batch, shuffle=False)
-    val_loader_cd = torch.utils.data.DataLoader(Liver_loader_val_cd, batch_size=args.test_batch, shuffle=False)
-    val_loader_gz = torch.utils.data.DataLoader(Liver_loader_val_gz, batch_size=args.test_batch, shuffle=False)
-    val_loader_les = torch.utils.data.DataLoader(Liver_loader_val_les, batch_size=args.test_batch, shuffle=False)
+    # val_loader_cd = torch.utils.data.DataLoader(Liver_loader_val_cd, batch_size=args.test_batch, shuffle=False)
+    # val_loader_gz = torch.utils.data.DataLoader(Liver_loader_val_gz, batch_size=args.test_batch, shuffle=False)
+    # val_loader_les = torch.utils.data.DataLoader(Liver_loader_val_les, batch_size=args.test_batch, shuffle=False)
 
 
     # Model
@@ -149,20 +142,25 @@ def main():
     if use_cuda:
         model = torch.nn.DataParallel(model).cuda()
 
-    if args.upload:
-        checkpoint = torch.load(r"../save_multi_model/2023_7_11/resnet50_our_BM_acc_1.pth.tar")
-        model.load_state_dict(checkpoint['state_dict'])
 
-    if args.pretrain:
+    if up_load:
+        checkpoint = torch.load(r"./BM.pth.tar")
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
+
+
+    if pretrained:
+        # replace_param(model=model)
         dict_trained = torch.load("../resnet50-19c8e357.pth")  # map_location=torch.device('cpu')
         dict_new = model.state_dict()
-        # 1. filter out unnecessary keys
+        # filter out unnecessary keys
         for k in dict_trained.keys():
             if k in dict_new.keys() and not k.startswith('fc'):
                 dict_new[k] = dict_trained[k]
 
-        # 2. overwrite entries in the existing state dict
+        # overwrite entries in the existing state dict
         model.load_state_dict(dict_new)
+
+
 
 
 
@@ -180,16 +178,16 @@ def main():
     best_person_acc_test = 0
 
 
-    for epoch in range(start_epoch, args.epochs): #
+    for epoch in range(args.start_epoch, args.epochs): #
         adjust_learning_rate(optimizer, epoch)
         print('\nDataset: {0} | Model: {1} | Params: {2:.2f}M | Beta: {3:.1f} | SD: {4}'.
               format(args.dataset, args.arch+str(args.depth), model_params, args.beta, args.self_distillation))
         print('Epoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, state['lr']))
-
-        # train_process(train_loader, model, criterion, optimizer, use_cuda, args.beta, args.self_distillation)
-        for data_loader in [test_loader, val_loader, val_loader_cd, val_loader_les, val_loader_gz]:
+        if Need_train:
+            train_process(train_loader, model, criterion, optimizer, use_cuda, args.beta, args.self_distillation)
+        for data_loader in [test_loader, val_loader]: # test_loader, val_loader, val_loader_cd, val_loader_gz, val_loader_les
             test_loss, test_acc, acc_statistic, auc_statistic = test_process(data_loader, model, criterion, use_cuda, args.beta, args.self_distillation)
-            if args.save and data_loader == test_loader:
+            if save_model and data_loader == test_loader:
                 best_person_auc_test = max(best_person_auc_test, auc_statistic)
                 best_signal_acc_test = max(best_signal_acc_test, test_acc)
                 best_person_acc_test = max(best_person_acc_test, acc_statistic)
@@ -199,24 +197,10 @@ def main():
                     'epoch': epoch + 1,
                     'state_dict': model.state_dict(),
                     'auc': best_person_auc_test,
-                    'acc': best_signal_acc_test,
+                    'acc': best_person_acc_test,
                     'optimizer': optimizer.state_dict(),
-                }, test_acc_is_best)
-                save_auc_checkpoint({
-                                'epoch': epoch + 1,
-                                'state_dict': model.state_dict(),
-                                'auc': best_person_auc_test,
-                                'acc': best_signal_acc_test,
-                                'optimizer': optimizer.state_dict(),
-                            }, test_auc_is_best)
-
-
-            if args.self_distillation:
-                print("Best AccSI: {0:4.2f} | Best AccAG: {1:4.2f} | Best AccSD: {2:4.2f}".format(best_acc_SI, best_acc_AG, best_acc_SD))
-            else:
-                print("Best AccSI: {0:4.2f} | Best AccAG: {1:4.2f}".format(best_acc_SI, best_acc_AG))
-
-            print(" best_person_auc: {}".format(best_person_auc_test) + " best_signal_acc: {}".format(best_signal_acc_test) + " best_person_acc: {}\n".format(best_person_acc_test))
+                }, epoch)
+        print(" best_person_auc: {}".format(best_person_auc_test) + " best_signal_acc: {}".format(best_signal_acc_test) + " best_person_acc: {}\n".format(best_person_acc_test))
 
 
 def adjust_learning_rate(optimizer, epoch):
