@@ -1,10 +1,10 @@
 from __future__ import print_function
 
 import time
-
 import torch
 import torch.nn.parallel
 import torch.nn.functional as F
+import torch.nn as nn
 import pandas as pd
 from sklearn import metrics
 from sklearn.preprocessing import label_binarize
@@ -20,11 +20,9 @@ from utils import *
 
 
 
-
 def train_process(data_loader, model, criterion, optimizer, use_cuda, beta, self_distillation=False):
     # switch to train mode
     model.train()
-
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -48,8 +46,6 @@ def train_process(data_loader, model, criterion, optimizer, use_cuda, beta, self
         joint_targets = torch.stack([targets * 5 + i
                                      for i in range(5)], 1).view(-1)
 
-
-
         if self_distillation:
             outputs3, outputs2, outputs_SD = model(inputs)
         else:
@@ -69,10 +65,8 @@ def train_process(data_loader, model, criterion, optimizer, use_cuda, beta, self
             loss = criterion(outputs3, joint_targets) + beta * criterion(outputs2, joint_targets) \
                    + (SD_loss.mul(T ** 2) + criterion(outputs_SD, targets) if self_distillation else 0.)
         else:
-            loss = criterion(outputs3, joint_targets) + beta * criterion(outputs2, joint_targets) # + criterion(outputs_SI, targets)
+            loss = criterion(outputs3, joint_targets) + beta * criterion(outputs2, joint_targets)
 
-        # print(outputs3, joint_targets)
-        # exit()
 
         # measure accuracy
         prec_SI = accuracy(outputs_SI.data, targets.data, topk=(1,))
@@ -195,13 +189,14 @@ def test_process(data_loader, model, criterion, use_cuda, beta, self_distillatio
     acc = 100.0 * correct_samples / total_samples
 
     # multi classification
-    df = pd.DataFrame({'people_id': people_id, 'preds': pred_list, 'labels': labels, 'path': paths_list})
-    df_result_save(df)
     df = pd.DataFrame({'people_id': people_id, 'preds': pred_list, 'labels': labels})
+    # all_predict_save(df)
     df = df.groupby('people_id')[['labels', 'preds']]
     person_preds, person_label, person_preds_label, acc_statistic = ACC_3Clas_statistic(df)
-    auc_statistic = AUC_3Clas_statistic(person_preds, person_label)
-    Confusion_Mat_3Clas_statistic(person_label, person_preds_label)
+    # If it is used for classification 3, change AUC_2Clas_statistic to AUC_3Clas_statistic
+    auc_statistic = AUC_2Clas_statistic(person_preds, person_label)
+    # If it is used for classification 3, change Confusion_Mat_2Clas_statistic to Confusion_Mat_3Clas_statistic
+    Confusion_Mat_2Clas_statistic(person_label, person_preds_label)
 
     print('Average test loss: ' + '{:.4f}'.format(loss) +'  Accuracy:' + '{:5}'.format(correct_samples) + '/' +
           '{:5}'.format(total_samples) + ' (' +'{:4.2f}'.format(acc) + '%)' + 'statis acc: ' + '{:4.2f}'.format(acc_statistic))
@@ -225,8 +220,10 @@ def ACC_error_statistic(df):
         labels = float(id_group["labels"].mean())
         # person_label.append(labels)
         if int(preds_pro) != int(labels):
-            if labels == 1 and preds_pro == 2:
-                print(name)
+            if labels == 0 and preds_pro ==1:
+                print("1 class", name)
+            if labels == 1 and preds_pro ==0:
+                print("2 class", name)
             for index, row in id_group.iterrows():
                 pred = float(np.argmax(row["preds"]))
                 label = row["labels"]
@@ -235,9 +232,9 @@ def ACC_error_statistic(df):
                     error_path.append(row["path"])
                     error_pred.append(pred)
                     error_label.append(label)
-    # assert len(error_name) == len(error_path) == len(error_label) == len(error_pred)
-    # dataframe = pd.DataFrame({"patient": error_name, "path": error_path, "pred": error_pred, "label": error_label})
-    # dataframe.to_csv("sy_fnh_hem_cyst_error.csv", index=False, sep=",")
+    assert len(error_name) == len(error_path) == len(error_label) == len(error_pred)
+    dataframe = pd.DataFrame({"patient": error_name, "path": error_path, "pred": error_pred, "label": error_label})
+    # dataframe.to_csv("/home/dkd/Code/HCC_ICC_39/fnh_hem_cyst_hn_error/fnh_hem_cyst_ap_hn_error.csv", index=False, sep=",")
 
 def df_result_save(df):
     person_preds = []
@@ -253,7 +250,27 @@ def df_result_save(df):
         name_list.append(name)
     assert len(name_list) == len(person_label) == len(person_preds)
     dataframe = pd.DataFrame({"patient": name_list, "pred": person_preds, "label": person_label})
-    dataframe.to_csv("doctor_BM.csv", index=False, sep=",")
+    # dataframe.to_csv("HCC_ICC_MET_predict_value.csv", index=False, sep=",")
+
+
+def all_predict_save(df):
+    person_preds = []
+    person_label = []
+    name_list = []
+    preds_label = []
+    df_group = df.groupby('people_id')[['labels', 'preds']]
+    for name, id_group in df_group:
+        pred_pro = np.mean(id_group["preds"].values, axis=0)
+        preds_pro = float(np.argmax([pred_pro]))
+        person_preds.append(pred_pro)
+        preds_label.append(preds_pro)
+        labels = float(id_group["labels"].mean())
+        person_label.append(labels)
+        name_list.append(name)
+    assert len(name_list) == len(person_label) == len(person_preds)
+    dataframe = pd.DataFrame({"patient": name_list, "pred": person_preds, "pred label":preds_label, "label": person_label})
+    dataframe.to_csv("./BM_our_hn_1.csv", index=False)
+
 
 def Auc2Class(df):
     def threshold(ytrue, ypred):
@@ -302,44 +319,49 @@ def ACC_3Clas_statistic(df):
         if int(preds_pro) == int(labels):
             id_count += 1
         # else:
-        #     print("predicted error: ", name)
+        #     print("predicted error: ", name, preds_pro, label)
     acc_statistic = id_count / len(df)
     return person_preds, person_label, person_preds_label, acc_statistic
 
-def macro_auc(y_true, person_preds):
+
+
+def macro_auc(y_true, person_preds, n):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    for i in range(2):
+    for i in range(n):
         roc_auc[i] = metrics.roc_auc_score(y_true[:, i], person_preds[:, i])
         print("class {} ".format(i) + 'statis auc ' + '{:.4f}'.format(roc_auc[i]))
         fpr[i], tpr[i], _ = roc_curve(y_true[:, i], person_preds[:, i])
-    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(2)]))
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n)]))
     mean_tpr = np.zeros_like(all_fpr)
-    for i in range(2):
+    for i in range(n):
         mean_tpr += interp(all_fpr, fpr[i], tpr[i])
-    mean_tpr /= 2
+    mean_tpr /= n
     fpr["macro"] = all_fpr
     tpr["macro"] = mean_tpr
-    # np.save('/home/dkd/Code/HCC_ICC/tu/result/B_our_fpr_hn.npy', fpr["macro"])
-    # np.save('/home/dkd/Code/HCC_ICC/tu/result/B_our_tpr_hn.npy', tpr["macro"])
+    # np.save('/home/dkd/Data_4TDISK/Code/HCC_ICC_results/hn_BM/BM_our_fpr_hn.npy', fpr["macro"])
+    # np.save('/home/dkd/Data_4TDISK/Code/HCC_ICC_results/hn_BM/BM_our_tpr_hn.npy', tpr["macro"])
     roc_auc["macro"] = metrics.roc_auc_score(y_true, person_preds, average="macro")
+    roc_auc["weight"] = metrics.roc_auc_score(y_true, person_preds, average="weighted")
+    print("weighted_auc: ", roc_auc["weight"])
+    # roc_auc["macro"] = metrics.roc_auc_score(y_true, person_preds, average="macro")
     # plt.figure()
     # plt.plot(fpr["macro"], tpr["macro"], label='micro-average ROC curve (area = {0:0.2f})'.format(roc_auc["macro"]),
     #          color='deeppink', linestyle=':', linewidth=4)
     # plt.show()
     return roc_auc["macro"]
 
-def micro_auc(y_true, person_preds):
+def micro_auc(y_true, person_preds, n):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    for i in range(2):
+    for i in range(n):
         roc_auc[i] = metrics.roc_auc_score(y_true[:, i], person_preds[:, i])
         print("class {} ".format(i) + 'statis auc ' + '{:.4f}'.format(roc_auc[i]))
     print("macro_auc: ", roc_auc["micro"])
     print("weigthed_auc: ", metrics.roc_auc_score(y_true, person_preds, average="weighted"))
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), person_preds.ravel())
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), person_preds.ravel())  # 把 label, scores数值化后拉开
     # np.save('/home/dkd/Code/HCC_ICC/tu/result/our_fpr_1.npy', fpr["micro"])
     # np.save('/home/dkd/Code/HCC_ICC/tu/result/our_tpr_1.npy', tpr["micro"])
     # plt.figure()
@@ -356,16 +378,40 @@ def list_onehot(actions: list, n: int):
 
 
 def AUC_3Clas_statistic(person_preds, person_label):
-    # y_true = label_binarize(person_label, classes=[0, 1, 2]) # using for three classification
-    y_true = list_onehot(person_label, 2 ) # # using for two classification
+    y_true = label_binarize(person_label, classes=[0, 1, 2]) # using for three classification
+    # y_true = list_onehot(person_label, 2) # # using for thwo classification
     y_true = np.array(y_true)
     person_preds = np.array(person_preds)
-    roc_auc = macro_auc(y_true, person_preds)
+    roc_auc = macro_auc(y_true, person_preds, n=3)
+    # roc_auc = micro_auc(y_true, person_preds)
+    print("macro_auc: ", roc_auc)
+    return roc_auc
+
+
+def AUC_2Clas_statistic(person_preds, person_label):
+    y_true = list_onehot(person_label, 2) # # using for thwo classification
+    y_true = np.array(y_true)
+    person_preds = np.array(person_preds)
+    roc_auc = macro_auc(y_true, person_preds, n=2)
     # roc_auc = micro_auc(y_true, person_preds)
     print("macro_auc: ", roc_auc)
     return roc_auc
 
 def Confusion_Mat_3Clas_statistic(y_true, y_pred):
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    print("weighted_f1: ", f1_score(y_true, y_pred, average='weighted'))
+    print("macro_f1: ", f1_score(y_true, y_pred, average='macro'))
+    print("weighted_recall: ", recall_score(y_true, y_pred, labels=[0., 1., 2.], average='weighted'))
+    print("macro_recall: ", recall_score(y_true, y_pred, labels=[0., 1., 2.], average='macro'))
+    print("weighted_precision: ", precision_score(y_true, y_pred, labels=[0., 1., 2.], average='weighted'))
+    print("macro_precision: ", precision_score(y_true, y_pred, labels=[0., 1., 2.], average='macro'))
+    confusion_data = confusion_matrix(y_true, y_pred, labels=[0., 1., 2.])
+    print("confusion matrix: \n", confusion_data)
+    # plt.matshow(confusion_data, cmap=plt.cm.Reds)
+
+
+def Confusion_Mat_2Clas_statistic(y_true, y_pred):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     print("weighted_f1: ", f1_score(y_true, y_pred, average='weighted'))
