@@ -85,12 +85,12 @@ def save_tensors_to_txt(labels, detections, file_name,ground_truth_dir,detection
 if __name__ == '__main__':
   
     
-    model = YOLO("detection/runs/detect/train124/weights/best.pt")
+    model = YOLO("./best.pt")
     
-    val_dataset= CustomDataset("detection/datasets/new/val/")
+    val_dataset= CustomDataset("./val/")
     val_loader= DataLoader(val_dataset, batch_size=128, shuffle=False, drop_last=False)
     
-    csv_file_path = "detection/datasets/csv1.csv"
+    csv_file_path = "./csv1.csv"
     
     for step,(img_names,images,label_paths) in enumerate(val_loader):
         images = images.to('cuda')
