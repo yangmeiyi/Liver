@@ -82,7 +82,6 @@ class SLA_transform:
         #     self.get_random()
         for _mask in self.mask:
             sub_mask = _mask.unsqueeze(0).repeat(bs, 1, 1, 1).cuda()
-            # 这里在第一维进行cat是为了达到能够以交叉排布标签的方式扩充数据
             x = torch.cat((x, sub_mask * x_copy), 1)
             # print(x_out.size())
         x = x.view(-1, *x_copy.shape[1:])
@@ -102,7 +101,6 @@ class SLA_transform:
 
         for _mask in self.mask[1:]:
             sub_mask = _mask.unsqueeze(0).repeat(bs, 1, 1, 1).cuda()
-            # 这里在第一维进行cat是为了达到能够以交叉排布标签的方式扩充数据
             x_mask = torch.cat((x_mask, sub_mask * x_copy), 1)
             # print(x_out.size())
         x_mask = x_mask.view(-1, *x_copy.shape[1:])
