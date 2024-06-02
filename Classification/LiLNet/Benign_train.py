@@ -6,9 +6,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 import argparse
 import shutil
-import time
 import random
-import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -16,15 +14,19 @@ import torch.optim as optim
 import torch.utils.data as data
 from resnet50_our import Our_resnet50
 from dataloader.fnh_hem_cyst_dataloader import CancerSeT_CSV
+from collections import OrderedDict
+from utils.variables import *
 from process import *
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 # Datasets
-parser.add_argument('-d', '--dataset', default='FNH_HEM_CYST', type=str)
+parser.add_argument('-d', '--dataset', default='B', type=str)
 parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 # Optimization options
-parser.add_argument('--epochs', default=50, type=int, metavar='N',
+parser.add_argument('--num_classes', default=3, type=int, metavar='N',
+                    help='number of classification')
+parser.add_argument('--epochs', default=20, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -32,21 +34,21 @@ parser.add_argument('--train-batch', default=128, type=int, metavar='N',
                     help='train batchsize')
 parser.add_argument('--test-batch', default=512, type=int, metavar='N',
                     help='test batchsize')
-parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
                     metavar='LR', help='initial learning rate')
-parser.add_argument('--schedule', type=int, nargs='+', default=[25,35],
+parser.add_argument('--schedule', type=int, nargs='+', default=[10, 15],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+parser.add_argument('--weight-decay', '--wd', default=1e-5, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 # Checkpoints
 parser.add_argument('-c', '--checkpoint', default='checkpoint', type=str, metavar='PATH',
                     help='path to save checkpoint (default: checkpoint)')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
 parser.add_argument('--save', default=True, action='store_true', help='save model')
+parser.add_argument('--pretrain', default=True, action='store_true', help='load pretrained param form Imagenet')
+parser.add_argument('--upload', default=True, action='store_true', help='load param form medical')
 # Architecture
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet', help='model architecture')
 parser.add_argument('--depth', type=int, default=50, help='Model depth.')
@@ -55,26 +57,25 @@ parser.add_argument('--block-name', type=str, default='Bottleneck',
 
 # Ours
 parser.add_argument('--beta', type=float, default=1., help='Ratio for the second to last.')
-parser.add_argument('--self-distillation', action='store_true', default=False,
+parser.add_argument('--self-distillation', action='store_true', default=True,
                     help='Utilizing self-distillation in ours or not.')
-parser.add_argument('--fc_mode', type=str, default='2fc', help='')
+parser.add_argument('--fc_mode', type=str, default='2fcsd', help='')
 parser.add_argument('--mask_mode', type=str, default='mask_mode', help='')
 
 # Miscs
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 
 # Device options
-parser.add_argument('--gpu-id', default='0,1,2,3,4,5,6', type=str,
+parser.add_argument('--gpu-id', default='0,1,2,3,4,5,6,7', type=str,
                     help='id(s) for CUDA_VISIBLE_DEVICES')
 
-# distribution options
-parser.add_argument('--dist', action='store_true', default=True,
-                    help='Utilizing ddp in ours or not.')
-parser.add_argument("--local_rank", type=int, default=-1,
-                    help='the number of process in each machine')
-parser.add_argument("--world_size", type=int, default=1)
 
 args = parser.parse_args()
+
+
+# Use CUDA
+os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
+use_cuda = torch.cuda.is_available()
 
 # Save Arguments
 state = {k: v for k, v in args._get_kwargs()}
@@ -84,11 +85,6 @@ with open(os.path.join(args.checkpoint, 'arguments.txt'), 'w') as f:
     for key in state.keys():
         f.writelines(str(key) + ': ' + str(state[key]) + '\n')
 
-# Use CUDA
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
-use_cuda = torch.cuda.is_available()
-
-
 # Random seed
 if args.manualSeed is None:
     args.manualSeed = random.randint(1, 10000)
@@ -97,50 +93,36 @@ torch.manual_seed(args.manualSeed)
 if use_cuda:
     torch.cuda.manual_seed_all(args.manualSeed)
 
-best_acc_SI = 0.
-best_acc_AG = 0.
-best_acc_SD = 0.
-num_classes = 3
 
-
-def save_acc_checkpoint(state, acc_is_best, checkpoint="./save_multi_model/2023_7_12/",
-                        filename='resnet50_our.pth.tar'):
-    filepath = os.path.join(checkpoint, filename)
+def save_acc_checkpoint(state, epoch, checkpoint="./", filename='B_our_sd_acc.pth.tar'):
+    save_filename = "epoch_" + str(epoch) + "_" + filename
+    filepath = os.path.join(checkpoint, save_filename)
     torch.save(state, filepath)
-    if acc_is_best:
-        shutil.copyfile(filepath, os.path.join(checkpoint, 'resnet50_our.pth.tar'))
 
 
 def main():
     global best_acc_SI, best_acc_AG, best_acc_SD
-    start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
-
-    if not os.path.isdir(args.checkpoint):
-        mkdir_p(args.checkpoint)
+    best_acc_SI = 0.
+    best_acc_AG = 0.
+    best_acc_SD = 0.
 
     # Data
-    print('==> Preparing Dataset %s For %d Classes' % (args.dataset, num_classes))
-    print('    Dataset: %s\n    Num Classes: %d' % (args.dataset, num_classes))
-    PATH = "./dataset_ct_ap_pvp_crop_224/"
+    print('==> Preparing Dataset %s For %d Classes' % (args.dataset, args.num_classes))
+    print('    Dataset: %s\n    Num Classes: %d' % (args.dataset, args.num_classes))
+    PATH = "/home/dkd/Data_4TDISK/dataset_ct_ap_pvp_crop_224/"  
     Liver_loader_train = CancerSeT_CSV(PATH, 'train')
     Liver_loader_test = CancerSeT_CSV(PATH, 'test')
-    Liver_loader_val = CancerSeT_CSV(PATH, 'val_hn')
-    Liver_loader_val_sy = CancerSeT_CSV(PATH, 'val_sy')
+    Liver_loader_val_hn = CancerSeT_CSV(PATH, 'val_hn')
 
 
-    train_loader = torch.utils.data.DataLoader(Liver_loader_train, batch_size=args.train_batch, shuffle=True,
-                                               drop_last=False)  # drop_last=True
+    train_loader = torch.utils.data.DataLoader(Liver_loader_train, batch_size=args.train_batch, shuffle=True, drop_last=False)
     test_loader = torch.utils.data.DataLoader(Liver_loader_test, batch_size=args.test_batch, shuffle=False)
-    val_loader = torch.utils.data.DataLoader(Liver_loader_val, batch_size=args.test_batch, shuffle=False)
-    sy_val_loader = torch.utils.data.DataLoader(Liver_loader_val_sy, batch_size=args.test_batch, shuffle=False)
-
-
-
+    val_loader = torch.utils.data.DataLoader(Liver_loader_val_hn, batch_size=args.test_batch, shuffle=False)
 
     # Model
     print("==> Creating Model '{}'".format(args.arch+str(args.depth)))
     model = Our_resnet50(
-        num_classes=num_classes * 5,
+        num_classes=args.num_classes * 5,
         block_name=args.block_name,
         self_distillation=args.self_distillation
     )
@@ -148,91 +130,61 @@ def main():
     if use_cuda:
         model = torch.nn.DataParallel(model).cuda()
 
+
     if up_load:
-        checkpoint = torch.load(r"./save_multi_model/resnet50_our_fnh_hem_cyst_acc_1.pth.tar")
-        model.load_state_dict(checkpoint['state_dict'])
+        checkpoint = torch.load(r"./B.pth.tar")
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-    if pretrained:
-        dict_trained = torch.load("./resnet50-19c8e357.pth")
-        dict_new = model.state_dict()
-        # 1. filter out unnecessary keys
-        for k in dict_trained.keys():
-            if k in dict_new.keys() and not k.startswith('fc'):
-                dict_new[k] = dict_trained[k]
-
-        # 2. overwrite entries in the existing state dict
-        model.load_state_dict(dict_new)
-
-
-
+    # if pretrained:
+    #     # replace_param(model=model)
+    #     dict_trained = torch.load("../resnet50-19c8e357.pth")  # map_location=torch.device('cpu')
+    #     dict_new = model.state_dict()
+    #     # 1. filter out unnecessary keys
+    #     for k in dict_trained.keys():
+    #         if k in dict_new.keys() and not k.startswith('fc'):
+    #             dict_new[k] = dict_trained[k]
+    #
+    #     # 2. overwrite entries in the existing state dict
+    #     model.load_state_dict(dict_new)
 
 
 
     cudnn.benchmark = True
     model_params = sum(p.numel() for p in model.parameters()) / 1000000.0
     print('Total params: %.2fM' % model_params)
-    criterion = nn.CrossEntropyLoss()
 
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
-    # Resume
-    title = 'Self-supervision of Feature Transformations' + args.arch
-
-    if args.resume:
-        print('==> Resuming from checkpoint..')
-        assert os.path.isfile(args.resume), 'Error: no checkpoint directory found!'
-        args.checkpoint = os.path.dirname(args.resume)
-        checkpoint = torch.load(args.resume)
-        best_acc = checkpoint['best_acc']
-        start_epoch = checkpoint['epoch']
-        model.load_state_dict(checkpoint['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        if not os.path.exists(os.path.join(args.checkpoint)):
-            os.mkdir(os.path.join(args.checkpoint))
-        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title, resume=True)
-    else:
-        if not os.path.exists(os.path.join(args.checkpoint)):
-            os.mkdir(os.path.join(args.checkpoint))
-        logger = Logger(os.path.join(args.checkpoint, 'log.txt'), title=title)
-
-        logger.set_names(['Learning Rate', 'Train Loss', 'Valid Loss', 'Train Acc.', ]
-                         + (['Acc SI.', 'Acc AG.', 'Acc SD.'] if args.self_distillation else ['Acc SI.', 'Acc AG.']))
 
     # Train and val
     best_signal_acc_test = 0
     best_person_auc_test = 0
     best_person_acc_test = 0
 
-    for epoch in range(start_epoch, args.epochs): #
+
+    for epoch in range(args.start_epoch, args.epochs): #
         adjust_learning_rate(optimizer, epoch)
         print('\nDataset: {0} | Model: {1} | Params: {2:.2f}M | Beta: {3:.1f} | SD: {4}'.
               format(args.dataset, args.arch+str(args.depth), model_params, args.beta, args.self_distillation))
         print('Epoch: [%d | %d] LR: %f' % (epoch + 1, args.epochs, state['lr']))
-
-        train_process(train_loader, model, criterion, optimizer, use_cuda, args.beta, args.self_distillation)
-        test_loss, test_acc, acc_statistic, auc_statistic = test_process(test_loader, model, criterion, use_cuda, args.beta, args.self_distillation)
-        test_process(val_loader, model, criterion, use_cuda, args.beta, args.self_distillation)
-        test_process(sy_val_loader, model, criterion, use_cuda, args.beta, args.self_distillation)
-
-        if args.save:
-            best_person_auc_test = max(best_person_auc_test, auc_statistic)
-            best_signal_acc_test = max(best_signal_acc_test, test_acc)
-            best_person_acc_test = max(best_person_acc_test, acc_statistic)
-            test_acc_is_best = acc_statistic >= best_person_acc_test
-            save_acc_checkpoint({
-                'epoch': epoch + 1,
-                'state_dict': model.state_dict(),
-                'auc': best_person_auc_test,
-                'acc': best_signal_acc_test,
-                'optimizer': optimizer.state_dict(),
-            }, test_acc_is_best)
-
-
-        if args.self_distillation:
-            print("Best AccSI: {0:4.2f} | Best AccAG: {1:4.2f} | Best AccSD: {2:4.2f}".format(best_acc_SI, best_acc_AG, best_acc_SD))
-        else:
-            print("Best AccSI: {0:4.2f} | Best AccAG: {1:4.2f}".format(best_acc_SI, best_acc_AG))
-
+        if Need_train
+            train_process(train_loader, model, criterion, optimizer, use_cuda, args.beta, args.self_distillation)
+        for data_loader in [test_loader, val_loader]:  # 
+            test_loss, test_acc, acc_statistic, auc_statistic = test_process(data_loader, model, criterion, use_cuda, args.beta, args.self_distillation)
+            if save_model and data_loader == test_loader:
+                best_person_auc_test = max(best_person_auc_test, auc_statistic)
+                best_signal_acc_test = max(best_signal_acc_test, test_acc)
+                best_person_acc_test = max(best_person_acc_test, acc_statistic)
+                test_acc_is_best = acc_statistic >= best_person_acc_test
+                test_auc_is_best = auc_statistic >= best_person_auc_test
+                save_acc_checkpoint({
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    'auc': best_person_auc_test,
+                    'acc': best_person_acc_test,
+                    'optimizer': optimizer.state_dict(),
+                }, epoch)       
         print(" best_person_auc: {}".format(best_person_auc_test) + " best_signal_acc: {}".format(best_signal_acc_test) + " best_person_acc: {}\n".format(best_person_acc_test))
 
 
