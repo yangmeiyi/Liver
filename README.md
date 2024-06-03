@@ -25,9 +25,9 @@ This study focused on developing a deep-learning AI-assisted system for liver cl
     - 📄hcc_icc_met_dataloader.py  (The dataloader for distinguishing hcc, icc, and met lesions)
   - 📁utils(Used for deep learning to load image data)
 - 📁Detection
-  - 📄train.py ()
-  - 📄test.py ()
-  - 📄calculate_index.py ()
+  - 📄train.py 
+  - 📄test.py
+  - 📄calculate_index.py
 
 - 📁Web testing data  (Data used to test the diagnostic system for liver lesions)
   - 📁Background 
