@@ -67,16 +67,11 @@ up_load = False #Whether to load the trained parameters
 pretrained = False #Whether to load pre-training parameters
 Need_train = False #Training or not
 save_model = False #Whether to train Whether to save the trained model
-dis = False  #Whether to train Whether to save the trained model Whether to choose distributed training
 
 image_size = 224 #The size of the input images
 padding_size = 0 #Whether enhance the data with padding image
 crop_size = 224 #Data enhancement cropped the image to 224
-batchsize_train = 256 #Batch size of the training set
-batchsize_test = 256 #Batch size of the testing set
-batchsize_val = 256 #Batch size of the validating set
-gpus = "1,2,3,4,5,6,7" #The ID of the used GPUs
-epochs = 200  #Training rounds
+
 
 ct = False #Only CT images are loaded
 ap = False #Only AP images are loaded
