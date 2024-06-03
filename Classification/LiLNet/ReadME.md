@@ -121,7 +121,7 @@ Open and load the trained model: up_load = True
 The default parameters of BM_train.py are used to test the classification of benign and malignant. Run the following script to validate with files above:
 
 ```
-# The trained model parameters is: BM.pth.tar (Download：https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=drive_link)
+# The trained model parameters is: BM.pth.tar (Download：[https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=drive_link](https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=sharing))
 python BM_train.py
 ```
 
