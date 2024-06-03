@@ -49,7 +49,8 @@ where **images** store the original image, **labels** store labels in .txt forma
 # Model Training
 
 **YOLO_V8**:
-yolov8x.pt (Download: https://drive.google.com/file/d/1rYGl2g424MoNwc3LMM_sDJ8JwSDA2voi/view?usp=drive_link) 
+yolov8x.pt (Download: [https://drive.google.com/file/d/1rYGl2g424MoNwc3LMM_sDJ8JwSDA2voi/view?usp=drive_link](https://drive.google.com/file/d/1rYGl2g424MoNwc3LMM_sDJ8JwSDA2voi/view?usp=sharing)) 
+
 ```python
 from ultralytics import YOLO
 model = YOLO("detection/yolov8x.pt")
@@ -57,7 +58,8 @@ model.train(data="detection/mydata.yaml",mosaic=0.1,imgsz=512,amp=False,epochs=2
 ```
 
 # Model Testing
-best.pt (Download: https://drive.google.com/file/d/1y7TzrwmhK6vb1BeXQFty0FqNKXcgVTBU/view?usp=drive_link)
+best.pt (Download: [https://drive.google.com/file/d/1y7TzrwmhK6vb1BeXQFty0FqNKXcgVTBU/view?usp=drive_link](https://drive.google.com/file/d/1y7TzrwmhK6vb1BeXQFty0FqNKXcgVTBU/view?usp=sharing))
+
 ```bash
 python Test.py
 ```
