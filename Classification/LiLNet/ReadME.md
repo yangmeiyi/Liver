@@ -120,7 +120,7 @@ Open and load the trained model: up_load = True
 
 The default parameters of BM_train.py are used to test the classification of benign and malignant. Run the following script to validate with files above:
 
-BM.pth.tar (Download: https://drive.google.com/file/d/1SclQhkmfspgpZgtqq4WnNqK--DqOt467/view?usp=sharing)
+BM.pth.tar (Download: https://zenodo.org/records/12646854/files/Time_BM.pth.tar?download=1)
 ```
 # The trained model parameters is: BM.pth.tar
 python BM_train.py
@@ -128,7 +128,7 @@ python BM_train.py
 
 The default parameters of Benign_train.py are used to test the benign (FNH, HEM,CYST) 3 classification. Run the following script to validate with files above:
 
- B.pth.tar (Download: https://drive.google.com/file/d/1fRdwKXlfEX2h87vW6Mv6C7XcZKRXJnRF/view?usp=sharing)
+ B.pth.tar (Download: https://zenodo.org/records/12646854/files/Time_B.pth.tar?download=1)
 ```
 # The trained model parameters is: B.pth.tar 
 python Benign_train.py
@@ -136,7 +136,7 @@ python Benign_train.py
 
 The default parameters of Malignant_train.py are used to test the malignancy (HCC, ICC, MET) 3 classification. Run the following script to validate with files above:
 
-M.pth.tar (Download: https://drive.google.com/file/d/1-ti8Fyugc4djyGpQ4Qs92Ek_CnXoGmfd/view?usp=sharing)
+M.pth.tar (Download: https://zenodo.org/records/12646854/files/Time_M.pth.tar?download=1)
 ```
 # The trained model parameters is: M.pth.tar 
 python Malignant_train.py
